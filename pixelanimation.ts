@@ -160,6 +160,7 @@ namespace pixelanimation {
             this.strip = strip
             this.dots = [];
             this.animationPlayed = false
+            this.currentEffect = undefined
             for (let i = 0; i < this.strip.length(); i++)
                 this.dots.push(new Color(0))
 
@@ -260,7 +261,7 @@ namespace pixelanimation {
         play(anim: AnimationStrip) {
             this.anim = anim
             let start = input.runningTime()
-            while (!this.immediatelyStopFlag && (input.runningTime() - start) < this.delay) {
+            while (!this.immediatelyStopFlag && (this.looped || (input.runningTime() - start) < this.delay)) {
                 if( ! this.backwards ) {
                     let d = this.anim.dots[this.anim.dots.length - 1]
                     for (let i = this.anim.dots.length - 1; i > 0; i--) {
@@ -274,6 +275,35 @@ namespace pixelanimation {
                         this.anim.dots[i] = this.anim.dots[i + 1]
                     }
                     this.anim.dots[this.anim.dots.length - 1] = d
+                }
+                pause(this.delay / this.anim.dots.length)
+            }
+            this.onAnimationEnded()
+        }
+    }
+
+    export class FeuerRoundAnimation extends AnimationEffect {
+        delay: number
+        backwards: boolean
+
+        constructor(delay: number, backwards: boolean = false, looped: boolean = true) {
+            super(looped)
+            this.delay = delay
+            this.backwards = backwards
+        }
+
+        play(anim: AnimationStrip) {
+            this.anim = anim
+            let start = input.runningTime()
+            while (!this.immediatelyStopFlag && (this.looped || (input.runningTime() - start) < this.delay)) {
+                let time = ((input.runningTime() - start) % this.delay) / this.delay
+                console.logValue('time', time)
+                for (let i = 0; i < this.anim.dots.length - 1; i++) {
+                    let t = Math.abs(1 - 2 * (time) )
+                    console.logValue('t', t)
+                    this.anim.dots[i].red = 255
+                    this.anim.dots[i].green = Math.floor( t * 255)
+                    this.anim.dots[i].blue = Math.floor(t * 255)
                 }
                 pause(this.delay / this.anim.dots.length)
             }
